@@ -11,15 +11,32 @@ cloud-init and puts the console on the serial port `vmadm console` uses.
 
 ## Build
 
-    nix build
+There are two images, from the same modules: `stable`, from the current
+NixOS release's channel (the `nixpkgs` input, `nixos-26.05`), and
+`unstable`, from `nixos-unstable` (the `nixpkgs-unstable` input).
 
-`result/` then holds the qcow2 image.
+    nix build .#stable
+    nix build .#unstable
+
+`result/` then holds the compressed qcow2 image. `nix build` alone builds
+`stable`.
+
+## Is stable still the newest release?
+
+    nix run .#check-stable
+
+Exits 0 if the `nixpkgs` input follows the newest NixOS release, and 1,
+naming the new channel, once nixpkgs has tagged a newer one (`YY.MM`;
+the `YY.MM-beta` branch-off tag does not count). Exits 2 when it cannot
+tell. `nix build .#checks.x86_64-linux.check-stable` runs its tests.
 
 ## Test
 
     nix run .#boot-test [IMAGE]
 
-Boots the image (by default the flake's) under QEMU with OVMF the way
+Boots the image (by default `stable`; pass the output of
+`nix build .#unstable --no-link --print-out-paths` for the other) under
+QEMU with OVMF the way
 SmartOS boots a bhyve guest: UEFI with no saved boot entries, virtio disk
 and NIC, and a 16 MiB FAT16 `CIDATA` disk holding `tests/cidata`, which
 is in the format smartos-live's `nocloud.js` writes. It checks over SSH
