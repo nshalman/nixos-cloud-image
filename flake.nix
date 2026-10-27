@@ -53,17 +53,23 @@
             ${pkgs.writeText "guest.json" (bootLayout guest)}
           touch $out
         '';
-      check-stable = pkgs.writeShellApplication {
-        name = "check-stable";
-        runtimeInputs = with pkgs; [
+      # A tool from scripts/<name>.sh.
+      script =
+        name: runtimeInputs:
+        pkgs.writeShellApplication {
+          inherit name runtimeInputs;
+          text = builtins.readFile ./scripts/${name}.sh;
+        };
+      check-stable = script "check-stable" (
+        with pkgs;
+        [
           coreutils
           git
           gnugrep
           gnused
           jq
-        ];
-        text = builtins.readFile ./scripts/check-stable.sh;
-      };
+        ]
+      );
     in
     {
       nixosModules.smartos-guest = ./smartos-guest.nix;
