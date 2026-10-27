@@ -70,6 +70,30 @@
           jq
         ]
       );
+      # nix itself comes from the PATH, so it is the one that talks to the
+      # host's daemon.
+      release-info = script "release-info" (
+        with pkgs;
+        [
+          coreutils
+          git
+          jq
+        ]
+      );
+      release-assets = script "release-assets" (
+        with pkgs;
+        [
+          coreutils
+          findutils
+          jq
+        ]
+      );
+      prune-releases = script "prune-releases" [ pkgs.jq ];
+      app = description: tool: {
+        type = "app";
+        program = pkgs.lib.getExe tool;
+        meta.description = description;
+      };
     in
     {
       nixosModules.smartos-guest = ./smartos-guest.nix;
@@ -90,16 +114,28 @@
               bash ${./tests/check-stable-test.sh}
               touch $out
             '';
+        release-scripts =
+          pkgs.runCommand "release-scripts-test"
+            {
+              nativeBuildInputs = [
+                release-assets
+                prune-releases
+                pkgs.jq
+              ];
+            }
+            ''
+              bash ${./tests/release-scripts-test.sh}
+              touch $out
+            '';
         guest-matches-image-stable = guestMatchesImage "stable";
         guest-matches-image-unstable = guestMatchesImage "unstable";
       };
 
       apps.${system} = {
-        check-stable = {
-          type = "app";
-          program = pkgs.lib.getExe check-stable;
-          meta.description = "Say whether the stable input follows the newest NixOS release";
-        };
+        check-stable = app "Say whether the stable input follows the newest NixOS release" check-stable;
+        release-info = app "Describe the release a channel's image would be" release-info;
+        release-assets = app "Write a release's image, checksum and image.json" release-assets;
+        prune-releases = app "List the releases beyond the ones to keep" prune-releases;
 
         boot-test = {
           type = "app";
