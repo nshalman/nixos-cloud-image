@@ -1,8 +1,10 @@
 # Prints, as JSON, what identifies the release that this checkout would
 # build for CHANNEL (stable or unstable): the NixOS version and nixpkgs
-# revision from flake.lock, the source commit, and the release tag,
-# <NixOS version>-g<source commit>. A build whose tag already exists has
-# been released, from the same nixpkgs and the same code.
+# revision from flake.lock, the source commit, the image's derivation,
+# and the release tag, <NixOS version>-<first 8 characters of the
+# derivation's hash>. A build whose tag already exists has been released:
+# the same derivation is the same image, whatever else changed in the
+# repository.
 #
 # Usage: release-info CHANNEL [--update]
 #   --update  first update CHANNEL's input in flake.lock to the head of its
@@ -29,15 +31,18 @@ fi
 node=$(jq -r -e --arg input "$input" '.nodes[.root].inputs[$input]' flake.lock)
 version=$(nix eval --raw ".#nixosConfigurations.$channel.config.system.nixos.label")
 release=$(nix eval --raw ".#nixosConfigurations.$channel.config.system.nixos.release")
+drv=$(nix eval --raw ".#packages.x86_64-linux.$channel.drvPath")
+hash=$(basename "$drv")
 commit=$(git rev-parse HEAD)
 
 jq -n \
   --arg channel "$channel" \
-  --arg tag "$version-g${commit:0:7}" \
+  --arg tag "$version-${hash:0:8}" \
   --arg release "$release" \
   --arg version "$version" \
+  --arg drv "$drv" \
   --arg commit "$commit" \
   --argjson nixpkgs "$(jq --arg node "$node" \
     '.nodes[$node] | {ref: .original.ref, rev: .locked.rev}' flake.lock)" \
   '{channel: $channel, tag: $tag, nixos_release: $release, nixos_version: $version,
-    nixpkgs: $nixpkgs, source_commit: $commit}'
+    nixpkgs: $nixpkgs, image_drv: $drv, source_commit: $commit}'

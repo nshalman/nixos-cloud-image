@@ -18,7 +18,7 @@ while [ $# -gt 0 ]; do
 done
 
 jq -r --argjson stable "$keep_stable" --argjson unstable "$keep_unstable" '
-  [.[] | select(.tagName | test("^[0-9]{2}\\.[0-9]{2}\\.[0-9]{8}\\.[0-9a-f]+-g[0-9a-f]+$"))] as $ours
+  [.[] | select(.tagName | test("^[0-9]{2}\\.[0-9]{2}\\.[0-9]{8}\\.[0-9a-f]+-[0-9a-df-np-sv-z]{8}$"))] as $ours
   | ([$ours[] | select(.isPrerelease | not)]
       | group_by(.tagName[0:5])
       | map(sort_by(.createdAt) | reverse | .[$stable:])

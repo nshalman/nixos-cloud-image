@@ -23,7 +23,7 @@ check() {
 cat > "$work/info.json" <<'EOF'
 {
   "channel": "stable",
-  "tag": "26.05.20261026.718f670-g2751be8",
+  "tag": "26.05.20261026.718f670-fc06x6dk",
   "nixos_release": "26.05",
   "nixos_version": "26.05.20261026.718f670",
   "nixpkgs": { "ref": "nixos-26.05", "rev": "718f670e845328e9c2cecdd832835712b2cbd065" },
@@ -42,7 +42,7 @@ check "assets: the image under its fixed name" \
 check "assets: a GNU-style checksum file" \
   test "$(cat "$work/out/$asset.sha256")" = "$want_sha  $asset"
 check "assets: image.json keeps the build info" \
-  jq -e '.tag == "26.05.20261026.718f670-g2751be8" and .nixpkgs.rev == "718f670e845328e9c2cecdd832835712b2cbd065"' \
+  jq -e '.tag == "26.05.20261026.718f670-fc06x6dk" and .nixpkgs.rev == "718f670e845328e9c2cecdd832835712b2cbd065"' \
   "$work/out/image.json"
 check "assets: image.json describes the image" \
   jq -e --arg sha "$want_sha" --arg asset "$asset" \
@@ -59,26 +59,26 @@ release() {
 }
 {
   echo "["
-  release 25.11.20260501.aaaaaaa-g1111111 false 2026-05-01T00:00:00Z; echo ","
-  release 26.05.20260601.bbbbbbb-g1111111 false 2026-06-01T00:00:00Z; echo ","
-  release 26.05.20260701.ccccccc-g1111111 false 2026-07-01T00:00:00Z; echo ","
-  release 26.05.20260801.ddddddd-g1111111 false 2026-08-01T00:00:00Z; echo ","
-  release 26.05.20260901.eeeeeee-g1111111 false 2026-09-01T00:00:00Z; echo ","
-  release 26.11.20261001.fffffff-g1111111 true 2026-10-01T00:00:00Z; echo ","
-  release 26.11.20261008.0000000-g1111111 true 2026-10-08T00:00:00Z; echo ","
-  release 26.11.20261015.1111111-g1111111 true 2026-10-15T00:00:00Z; echo ","
-  release 26.11.20261022.2222222-g1111111 true 2026-10-22T00:00:00Z; echo ","
-  release 26.11.20261029.3333333-g1111111 true 2026-10-29T00:00:00Z; echo ","
+  release 25.11.20260501.aaaaaaa-fc06x6dk false 2026-05-01T00:00:00Z; echo ","
+  release 26.05.20260601.bbbbbbb-fc06x6dk false 2026-06-01T00:00:00Z; echo ","
+  release 26.05.20260701.ccccccc-fc06x6dk false 2026-07-01T00:00:00Z; echo ","
+  release 26.05.20260801.ddddddd-fc06x6dk false 2026-08-01T00:00:00Z; echo ","
+  release 26.05.20260901.eeeeeee-fc06x6dk false 2026-09-01T00:00:00Z; echo ","
+  release 26.11.20261001.fffffff-fc06x6dk true 2026-10-01T00:00:00Z; echo ","
+  release 26.11.20261008.0000000-fc06x6dk true 2026-10-08T00:00:00Z; echo ","
+  release 26.11.20261015.1111111-fc06x6dk true 2026-10-15T00:00:00Z; echo ","
+  release 26.11.20261022.2222222-fc06x6dk true 2026-10-22T00:00:00Z; echo ","
+  release 26.11.20261029.3333333-fc06x6dk true 2026-10-29T00:00:00Z; echo ","
   release some-other-tag false 2020-01-01T00:00:00Z
   echo "]"
 } > "$work/releases.json"
 
 check "prune: the oldest stable beyond 3 per series and unstable beyond 4" \
   test "$(prune-releases < "$work/releases.json")" = \
-  "$(printf '%s\n' 26.05.20260601.bbbbbbb-g1111111 26.11.20261001.fffffff-g1111111)"
+  "$(printf '%s\n' 26.05.20260601.bbbbbbb-fc06x6dk 26.11.20261001.fffffff-fc06x6dk)"
 check "prune: other keep counts" \
   test "$(prune-releases --keep-stable 1 --keep-unstable 5 < "$work/releases.json")" = \
-  "$(printf '%s\n' 26.05.20260601.bbbbbbb-g1111111 26.05.20260701.ccccccc-g1111111 26.05.20260801.ddddddd-g1111111)"
+  "$(printf '%s\n' 26.05.20260601.bbbbbbb-fc06x6dk 26.05.20260701.ccccccc-fc06x6dk 26.05.20260801.ddddddd-fc06x6dk)"
 check "prune: nothing to delete prints nothing" \
   test -z "$(echo '[]' | prune-releases)"
 
