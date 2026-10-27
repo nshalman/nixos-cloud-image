@@ -23,6 +23,36 @@
             ./image.nix
           ];
         };
+      # What booting from the image's disk needs from a configuration.
+      bootLayout =
+        config:
+        builtins.toJSON {
+          fileSystems = builtins.mapAttrs (_: fs: {
+            inherit (fs)
+              device
+              fsType
+              autoResize
+              options
+              ;
+          }) config.fileSystems;
+          systemd-boot = config.boot.loader.systemd-boot.enable;
+          grub = config.boot.loader.grub.enable;
+          canTouchEfiVariables = config.boot.loader.efi.canTouchEfiVariables;
+          growPartition = config.boot.growPartition;
+        };
+      # A guest that nixos-rebuilds from nixosConfigurations.<channel> must
+      # keep the image's filesystems and bootloader.
+      guestMatchesImage =
+        channel:
+        let
+          guest = self.nixosConfigurations.${channel}.config;
+          image = guest.system.build.images.qemu-efi.passthru.config;
+        in
+        pkgs.runCommand "guest-matches-image-${channel}" { } ''
+          diff -u ${pkgs.writeText "image.json" (bootLayout image)} \
+            ${pkgs.writeText "guest.json" (bootLayout guest)}
+          touch $out
+        '';
       check-stable = pkgs.writeShellApplication {
         name = "check-stable";
         runtimeInputs = with pkgs; [
@@ -47,21 +77,27 @@
         default = self.packages.${system}.stable;
       };
 
-      checks.${system}.check-stable =
-        pkgs.runCommand "check-stable-test" { nativeBuildInputs = [ check-stable ]; }
-          ''
-            bash ${./tests/check-stable-test.sh}
-            touch $out
-          '';
+      checks.${system} = {
+        check-stable =
+          pkgs.runCommand "check-stable-test" { nativeBuildInputs = [ check-stable ]; }
+            ''
+              bash ${./tests/check-stable-test.sh}
+              touch $out
+            '';
+        guest-matches-image-stable = guestMatchesImage "stable";
+        guest-matches-image-unstable = guestMatchesImage "unstable";
+      };
 
       apps.${system} = {
         check-stable = {
           type = "app";
           program = pkgs.lib.getExe check-stable;
+          meta.description = "Say whether the stable input follows the newest NixOS release";
         };
 
         boot-test = {
           type = "app";
+          meta.description = "Boot an image as SmartOS would and check cloud-init configured it";
           program = pkgs.lib.getExe (
             pkgs.writeShellApplication {
               name = "boot-test";

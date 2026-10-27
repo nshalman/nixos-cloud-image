@@ -10,6 +10,20 @@
 {
   imports = [ (modulesPath + "/profiles/qemu-guest.nix") ];
 
+  # The disk as nixpkgs' qemu-efi image lays it out, so that a guest can
+  # nixos-rebuild from a configuration made with this module.
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos";
+    fsType = "ext4";
+    autoResize = true;
+  };
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-label/ESP";
+    fsType = "vfat";
+  };
+  boot.loader.systemd-boot.enable = true;
+  boot.growPartition = true;
+
   # vmadm console attaches to the guest's first serial port; the last
   # console= becomes /dev/console.
   boot.kernelParams = [
