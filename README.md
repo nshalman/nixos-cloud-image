@@ -61,8 +61,11 @@ records the NixOS version, nixpkgs revision, source commit and image
 derivation. Unstable builds are pre-releases, so the latest release is
 always the newest stable image. Tags are `<NixOS version>-<first 8
 characters of the image derivation's hash>`, and point at a commit
-holding the `flake.lock` the image was built from (on no branch), so
-`nix build github:nshalman/nixos-cloud-image/<tag>#<channel>` rebuilds it.
+holding the `flake.lock` the image was built from. When the build
+updated the lock, that commit is on no branch.
+`nix build github:nshalman/nixos-cloud-image/<tag>#<channel>` builds the
+same configuration from the same nixpkgs. The image is equivalent but not
+byte-identical, because the image build isn't reproducible bit for bit.
 
 - `build.yml` builds from the head of each channel: unstable weekly,
   stable monthly and on every push to `main`. It skips images released

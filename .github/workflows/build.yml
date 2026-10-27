@@ -128,7 +128,8 @@ jobs:
             + "- nixpkgs: [\(.nixpkgs.ref) @ \(.nixpkgs.rev[0:12])](https://github.com/NixOS/nixpkgs/commit/\(.nixpkgs.rev))\n"
             + "- source: [\(.source_commit[0:12])](https://github.com/\($repo)/commit/\(.source_commit))\n"
             + "- image: `\(.image.file)`, \(.image.size) bytes, sha256 `\(.image.sha256)`\n\n"
-            + "Rebuild it with `nix build github:\($repo)/\(.tag)#\(.channel)`."
+            + "`nix build github:\($repo)/\(.tag)#\(.channel)` builds the same configuration from the same nixpkgs. "
+            + "The resulting image is equivalent to this one but not byte-identical, because the image build isn'"'"'t reproducible bit for bit."
           ' assets/image.json > notes.md
           if [ "$CHANNEL" = unstable ]; then
             channel_flags=(--prerelease --latest=false)
