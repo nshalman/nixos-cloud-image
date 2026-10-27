@@ -30,6 +30,12 @@
     # libexec/ rather than libexec/cloud-init/, where keys-to-console looks
     # for it, so the module only warns and degrades cloud-init's status.
     settings.ssh.emit_keys_to_console = false;
+    # The image has no SSH host keys, and NixOS's sshd-keygen makes them on
+    # first boot. Left to it, cloud-init's ssh module would delete and
+    # regenerate them at the same time, since cloud-config is not ordered
+    # against sshd-keygen, and fail with "already exists".
+    settings.ssh_deletekeys = false;
+    settings.ssh_genkeytypes = [ ];
   };
   # The module runs cloud-init from its units only; put it on the PATH
   # too, for `cloud-init status --wait` and friends.

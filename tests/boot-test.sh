@@ -136,6 +136,18 @@ runcmd_ran() {
   guest test -e /var/lib/cloud-init-runcmd-ran
 }
 
+# NixOS's sshd-keygen makes the host keys. cloud-init's ssh module would
+# race it, since cloud-config is not ordered against sshd-keygen, so it
+# must not delete or generate them.
+host_keys_left_to_nixos() {
+  # cloud-init logs to the journal only (/var/log/cloud-init.log stays
+  # empty). Check that the cloud-config stage ran and ran no ssh-keygen.
+  local log
+  log=$(guest sudo journalctl -b -u cloud-config --no-pager)
+  grep -q -F "Running module ssh " <<< "$log" &&
+    ! grep -q -F "['ssh-keygen'" <<< "$log"
+}
+
 root_filesystem_grown() {
   local size
   size=$(guest df -B1 --output=size / | tail -n 1)
@@ -167,6 +179,7 @@ check "first boot: default route via the gateway" default_route_via_gateway
 check "first boot: resolver from network-config" resolver_configured
 check "first boot: sudo from user-data" sudo_works
 check "first boot: runcmd ran" runcmd_ran
+check "first boot: host keys left to NixOS" host_keys_left_to_nixos
 check "first boot: root filesystem grown to the disk" root_filesystem_grown
 check "first boot: login prompt on the serial console" serial_console_login
 
