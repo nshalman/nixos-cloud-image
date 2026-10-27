@@ -203,6 +203,7 @@ check "second boot: cloud-init finished without errors" cloud_init_done
 check "second boot: hostname from meta-data" hostname_is_set
 check "second boot: static address on net0" static_address_on_net0
 check "second boot: default route via the gateway" default_route_via_gateway
+check "second boot: sudo from user-data" sudo_works
 
 if [ "$failures" -ne 0 ]; then
   echo "boot-test: $failures check(s) failed"

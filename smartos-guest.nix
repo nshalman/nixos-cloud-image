@@ -57,6 +57,11 @@
   # too, for `cloud-init status --wait` and friends.
   environment.systemPackages = [ pkgs.cloud-init ];
 
+  # cloud-init grants sudo in /etc/sudoers.d. NixOS's sudoers does not read
+  # that directory, so cloud-init appends an includedir to /etc/sudoers,
+  # which NixOS rewrites at every activation, boot included.
+  security.sudo.extraConfig = "@includedir /etc/sudoers.d";
+
   # The network and hostname come from cloud-init.
   networking.useDHCP = false;
   networking.hostName = lib.mkDefault "";
