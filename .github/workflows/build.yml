@@ -1,0 +1,161 @@
+name: Build and release
+
+# Builds a channel's image from the head of its NixOS channel, boot-tests
+# it, and publishes it as a release, unless that exact image (the same
+# derivation) is released already. The release tag points at a commit
+# holding the flake.lock it was built from; that commit is on no branch,
+# so main is never written to.
+#
+# Unstable: weekly. Stable: monthly, and on every push to main (merging a
+# bump to a new release, or a change to the image), where unchanged
+# images are skipped.
+
+on:
+  schedule:
+    - cron: "17 5 * * 1" # unstable, Mondays
+    - cron: "17 6 1 * *" # stable, the 1st of the month
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Channel to build
+        type: choice
+        options: [stable, unstable]
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      channels: ${{ steps.channels.outputs.channels }}
+    steps:
+      - id: channels
+        env:
+          EVENT: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+          CHANNEL: ${{ inputs.channel }}
+        run: |
+          case "$EVENT" in
+            schedule)
+              case "$SCHEDULE" in
+                "17 5 * * 1") channels='["unstable"]' ;;
+                "17 6 1 * *") channels='["stable"]' ;;
+                *) echo "::error::unknown schedule '$SCHEDULE'"; exit 1 ;;
+              esac ;;
+            workflow_dispatch) channels="[\"$CHANNEL\"]" ;;
+            push) channels='["stable", "unstable"]' ;;
+            *) echo "::error::unexpected event '$EVENT'"; exit 1 ;;
+          esac
+          echo "channels=$channels" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        channel: ${{ fromJSON(needs.plan.outputs.channels) }}
+    concurrency:
+      group: build-${{ matrix.channel }}
+    env:
+      CHANNEL: ${{ matrix.channel }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+
+      - name: Require KVM
+        run: |
+          # Building the image runs a VM, and so does the boot test.
+          if [ ! -w /dev/kvm ]; then
+            echo "::error::/dev/kvm is missing or not writable on this runner"
+            exit 1
+          fi
+          nix config show system-features
+          df -h /
+
+      - name: Plan the release
+        id: info
+        run: |
+          nix run .#release-info -- "$CHANNEL" --update > info.json
+          cat info.json
+          tag=$(jq -r .tag info.json)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$tag is released already; nothing to do"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        if: steps.info.outputs.exists == 'false'
+        run: nix build ".#$CHANNEL" --print-build-logs
+
+      - name: Boot test
+        if: steps.info.outputs.exists == 'false'
+        run: nix run .#boot-test -- result
+
+      - name: Write the assets
+        if: steps.info.outputs.exists == 'false'
+        run: nix run .#release-assets -- info.json result assets
+
+      - name: Tag the lock that was built
+        if: steps.info.outputs.exists == 'false'
+        env:
+          TAG: ${{ steps.info.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- flake.lock; then
+            git commit -m "flake.lock for $TAG" -- flake.lock
+          fi
+          git tag -a "$TAG" -m "NixOS $(jq -r .nixos_version info.json) ($CHANNEL) for SmartOS"
+          git push origin "refs/tags/$TAG"
+
+      - name: Release
+        if: steps.info.outputs.exists == 'false'
+        env:
+          TAG: ${{ steps.info.outputs.tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          jq -r --arg repo "$REPO" '
+            "NixOS \(.nixos_version) (\(.channel)) for SmartOS bhyve guests, configured by cloud-init (NoCloud).\n\n"
+            + "- nixpkgs: [\(.nixpkgs.ref) @ \(.nixpkgs.rev[0:12])](https://github.com/NixOS/nixpkgs/commit/\(.nixpkgs.rev))\n"
+            + "- source: [\(.source_commit[0:12])](https://github.com/\($repo)/commit/\(.source_commit))\n"
+            + "- image: `\(.image.file)`, \(.image.size) bytes, sha256 `\(.image.sha256)`\n\n"
+            + "Rebuild it with `nix build github:\($repo)/\(.tag)#\(.channel)`."
+          ' assets/image.json > notes.md
+          if [ "$CHANNEL" = unstable ]; then
+            channel_flags=(--prerelease --latest=false)
+          else
+            channel_flags=(--latest)
+          fi
+          gh release create "$TAG" --verify-tag "${channel_flags[@]}" \
+            --title "NixOS $(jq -r .nixos_version info.json) ($CHANNEL)" \
+            --notes-file notes.md \
+            assets/nixos-smartos-x86_64.qcow2 \
+            assets/nixos-smartos-x86_64.qcow2.sha256 \
+            assets/image.json
+
+  prune:
+    needs: build
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+      - name: Delete releases beyond 3 per stable series and 4 unstable
+        run: |
+          gh release list --limit 1000 --json tagName,isPrerelease,createdAt > releases.json
+          nix run .#prune-releases < releases.json > prune.txt
+          while read -r tag; do
+            echo "Deleting $tag"
+            gh release delete "$tag" --cleanup-tag --yes
+          done < prune.txt

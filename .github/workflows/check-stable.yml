@@ -1,0 +1,90 @@
+name: Check stable
+
+# Daily: when nixpkgs has tagged a NixOS release newer than the stable
+# input's channel, point the input at the new channel on a branch,
+# build and boot-test that image, and open a pull request saying how the
+# test went. Merging it is a person's call; build.yml then releases it.
+#
+# A pull request opened with this workflow's token runs no workflows of
+# its own, so the test result is in its description instead.
+
+on:
+  schedule:
+    - cron: "41 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+
+      - name: Check
+        id: check
+        run: |
+          status=0
+          nix run .#check-stable || status=$?
+          case $status in
+            0) echo "behind=false" >> "$GITHUB_OUTPUT" ;;
+            1) echo "behind=true" >> "$GITHUB_OUTPUT"
+               echo "newest=$(nix run .#check-stable -- --newest)" >> "$GITHUB_OUTPUT" ;;
+            *) exit "$status" ;;
+          esac
+
+      - name: Look for an open pull request
+        id: pr
+        if: steps.check.outputs.behind == 'true'
+        env:
+          BRANCH: bump-stable-${{ steps.check.outputs.newest }}
+        run: |
+          open=$(gh pr list --head "$BRANCH" --state open --json number --jq length)
+          echo "open=$open" >> "$GITHUB_OUTPUT"
+
+      - name: Bump, build and boot-test
+        id: bump
+        if: steps.check.outputs.behind == 'true' && steps.pr.outputs.open == '0'
+        env:
+          NEWEST: ${{ steps.check.outputs.newest }}
+        run: |
+          nix run .#bump-stable -- "$NEWEST"
+          if [ ! -w /dev/kvm ]; then
+            echo "tested=no: /dev/kvm is missing or not writable on the runner" >> "$GITHUB_OUTPUT"
+          elif nix build .#stable --print-build-logs && nix run .#boot-test -- result; then
+            echo "tested=passed" >> "$GITHUB_OUTPUT"
+          else
+            echo "tested=FAILED" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open a pull request
+        if: steps.bump.outcome == 'success'
+        env:
+          NEWEST: ${{ steps.check.outputs.newest }}
+          BRANCH: bump-stable-${{ steps.check.outputs.newest }}
+          TESTED: ${{ steps.bump.outputs.tested }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git commit -m "Move stable to NixOS $NEWEST" -- flake.nix flake.lock
+          git push --force origin "$BRANCH"
+          printf '%s\n' \
+            "nixpkgs has tagged NixOS $NEWEST, so this points the stable input at nixos-$NEWEST." \
+            "" \
+            "Build and boot test of the new stable image: **$TESTED** ([run]($RUN))." \
+            "" \
+            "Merging it makes build.yml release the image. Before that, check the" \
+            "NixOS $NEWEST release notes for changes that affect the guest module." \
+            > body.md
+          gh pr create --head "$BRANCH" --title "Move stable to NixOS $NEWEST" --body-file body.md
+          if [ "$TESTED" != passed ]; then
+            echo "::error::the bumped stable image was not tested successfully: $TESTED"
+            exit 1
+          fi
