@@ -29,6 +29,8 @@
     # nixpkgs' cloud-init 25.2 installs write-ssh-key-fingerprints in
     # libexec/ rather than libexec/cloud-init/, where keys-to-console looks
     # for it, so the module only warns and degrades cloud-init's status.
+    # Fixed on nixos-unstable by NixOS/nixpkgs@3f5843fff5; drop this once
+    # the stable channel has that fix too.
     settings.ssh.emit_keys_to_console = false;
     # The image has no SSH host keys, and NixOS's sshd-keygen makes them on
     # first boot. Left to it, cloud-init's ssh module would delete and
