@@ -89,6 +89,14 @@
         ]
       );
       prune-releases = script "prune-releases" [ pkgs.jq ];
+      bump-stable = script "bump-stable" (
+        with pkgs;
+        [
+          coreutils
+          gnugrep
+          gnused
+        ]
+      );
       app = description: tool: {
         type = "app";
         program = pkgs.lib.getExe tool;
@@ -127,6 +135,12 @@
               bash ${./tests/release-scripts-test.sh}
               touch $out
             '';
+        bump-stable =
+          pkgs.runCommand "bump-stable-test" { nativeBuildInputs = [ bump-stable ]; }
+            ''
+              bash ${./tests/bump-stable-test.sh} ${./flake.nix}
+              touch $out
+            '';
         guest-matches-image-stable = guestMatchesImage "stable";
         guest-matches-image-unstable = guestMatchesImage "unstable";
       };
@@ -136,6 +150,7 @@
         release-info = app "Describe the release a channel's image would be" release-info;
         release-assets = app "Write a release's image, checksum and image.json" release-assets;
         prune-releases = app "List the releases beyond the ones to keep" prune-releases;
+        bump-stable = app "Point the stable input at a new NixOS release" bump-stable;
 
         boot-test = {
           type = "app";
