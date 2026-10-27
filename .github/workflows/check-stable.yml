@@ -4,6 +4,8 @@ name: Check stable
 # input's channel, point the input at the new channel on a branch,
 # build and boot-test that image, and open a pull request saying how the
 # test went. Merging it is a person's call; build.yml then releases it.
+# The pull request is against the branch this ran on: main when
+# scheduled, another branch when dispatched there to try this out.
 #
 # A pull request opened with this workflow's token runs no workflows of
 # its own, so the test result is in its description instead.
@@ -67,6 +69,7 @@ jobs:
         env:
           NEWEST: ${{ steps.check.outputs.newest }}
           BRANCH: bump-stable-${{ steps.check.outputs.newest }}
+          BASE: ${{ github.ref_name }}
           TESTED: ${{ steps.bump.outputs.tested }}
           RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
@@ -83,7 +86,7 @@ jobs:
             "Merging it makes build.yml release the image. Before that, check the" \
             "NixOS $NEWEST release notes for changes that affect the guest module." \
             > body.md
-          gh pr create --head "$BRANCH" --title "Move stable to NixOS $NEWEST" --body-file body.md
+          gh pr create --base "$BASE" --head "$BRANCH" --title "Move stable to NixOS $NEWEST" --body-file body.md
           if [ "$TESTED" != passed ]; then
             echo "::error::the bumped stable image was not tested successfully: $TESTED"
             exit 1
