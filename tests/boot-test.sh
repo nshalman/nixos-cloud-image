@@ -146,6 +146,15 @@ serial_console_login() {
   grep -q "$hostname login:" "$work/serial.log"
 }
 
+# zlib, qcow2's default, since every qcow2 reader can decompress it.
+image_compressed() {
+  qemu-img info --output=json "$image" |
+    jq -e '."format-specific".data."compression-type" == "zlib"' > /dev/null &&
+    qemu-img map --output=json "$image" | jq -e 'any(.[]; .compressed)' > /dev/null
+}
+
+check "image: zlib-compressed qcow2" image_compressed
+
 if ! wait_for_ssh; then
   echo "FAIL: first boot: SSH as the user-data's user"
   exit 1
