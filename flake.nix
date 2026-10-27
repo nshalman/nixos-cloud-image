@@ -172,7 +172,10 @@
               runtimeEnv = {
                 OVMF_CODE = "${pkgs.OVMF.fd}/FV/OVMF_CODE.fd";
                 OVMF_VARS = "${pkgs.OVMF.fd}/FV/OVMF_VARS.fd";
-                CIDATA = ./tests/cidata;
+                # Interpolated, so the directory is copied to the store: a bare
+                # path becomes a string naming it inside the flake source, which
+                # newer Nix (2.35) does not copy to the store.
+                CIDATA = "${./tests/cidata}";
               };
               text = builtins.readFile ./tests/boot-test.sh;
             }
