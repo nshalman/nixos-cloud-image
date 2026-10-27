@@ -7,17 +7,21 @@
 # vmadm writes (tests/cidata, in the format of smartos-live's
 # src/vm/node_modules/cloudinit/nocloud.js).
 #
-# Usage: boot-test [IMAGE]
-#   IMAGE is a qcow2 file, or a directory holding one; by default the
-#   flake's image. Needs OVMF_CODE, OVMF_VARS and CIDATA in the environment,
-#   which the flake app sets.
+# Usage: boot-test IMAGE
+#   IMAGE is a qcow2 file, or a directory holding one, such as the output
+#   of `nix build .#stable`. Needs OVMF_CODE, OVMF_VARS and CIDATA in the
+#   environment, which the flake app sets.
 
-image=${1:-$DEFAULT_IMAGE}
+if [ $# -ne 1 ]; then
+  echo "usage: boot-test IMAGE" >&2
+  exit 2
+fi
+image=$1
 if [ -d "$image" ]; then
   image=$(find -L "$image" -maxdepth 1 -name '*.qcow2' | head -n 1)
 fi
 if [ ! -f "$image" ]; then
-  echo "boot-test: no qcow2 image at '${1:-$DEFAULT_IMAGE}'" >&2
+  echo "boot-test: no qcow2 image at '$1'" >&2
   exit 2
 fi
 

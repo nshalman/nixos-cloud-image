@@ -32,11 +32,10 @@ tell. `nix build .#checks.x86_64-linux.check-stable` runs its tests.
 
 ## Test
 
-    nix run .#boot-test [IMAGE]
+    nix run .#boot-test -- "$(nix build .#stable --no-link --print-out-paths)"
 
-Boots the image (by default `stable`; pass the output of
-`nix build .#unstable --no-link --print-out-paths` for the other) under
-QEMU with OVMF the way
+Boots the image (`stable` here; likewise `unstable`) under QEMU with
+OVMF the way
 SmartOS boots a bhyve guest: UEFI with no saved boot entries, virtio disk
 and NIC, and a 16 MiB FAT16 `CIDATA` disk holding `tests/cidata`, which
 is in the format smartos-live's `nocloud.js` writes. It checks over SSH

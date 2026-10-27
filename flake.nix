@@ -116,7 +116,6 @@
                 OVMF_CODE = "${pkgs.OVMF.fd}/FV/OVMF_CODE.fd";
                 OVMF_VARS = "${pkgs.OVMF.fd}/FV/OVMF_VARS.fd";
                 CIDATA = ./tests/cidata;
-                DEFAULT_IMAGE = self.packages.${system}.default;
               };
               text = builtins.readFile ./tests/boot-test.sh;
             }
