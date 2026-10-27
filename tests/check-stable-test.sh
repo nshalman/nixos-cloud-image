@@ -59,6 +59,26 @@ lock nixos-26.05
 tags
 expect "no release tags is an error" 2 'no NixOS release tags'
 
+expect_newest() {
+  local what=$1 wanted=$2 output actual=0
+  output=$(check-stable --newest --tags "$work/tags" 2>&1) || actual=$?
+  if [ "$actual" -eq 0 ] && [ "$output" = "$wanted" ]; then
+    echo "ok: $what"
+  else
+    echo "FAIL: $what: exit $actual, output (wanted $wanted):"
+    echo "$output"
+    failures=$((failures + 1))
+  fi
+}
+
+tags 25.11 26.05 26.11 26.11-beta 27.05-beta
+expect_newest "--newest prints only the newest release" 26.11
+
+# --newest needs no lock: it is what a bump to a new channel reads.
+rm "$work/flake.lock"
+tags 26.05
+expect_newest "--newest does not read the lock" 26.05
+
 if [ "$failures" -ne 0 ]; then
   echo "check-stable-test: $failures test(s) failed"
   exit 1

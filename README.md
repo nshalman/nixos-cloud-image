@@ -28,7 +28,8 @@ NixOS release's channel (the `nixpkgs` input, `nixos-26.05`), and
 Exits 0 if the `nixpkgs` input follows the newest NixOS release, and 1,
 naming the new channel, once nixpkgs has tagged a newer one (`YY.MM`;
 the `YY.MM-beta` branch-off tag does not count). Exits 2 when it cannot
-tell. `nix build .#checks.x86_64-linux.check-stable` runs its tests.
+tell. With `--newest` it prints only the newest release. `nix build
+.#checks.x86_64-linux.check-stable` runs its tests.
 
 ## Test
 
