@@ -1,0 +1,11 @@
+{
+  "distros": [
+    {
+      "id": "nixos",
+      "name": "NixOS (community build)",
+      "os_family": "linux",
+      "homepage": "https://github.com/nshalman/nixos-cloud-image",
+      "checked_at": "2026-10-28T17:55:19.001645588Z"
+    }
+  ]
+}

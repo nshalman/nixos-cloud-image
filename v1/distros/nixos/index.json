@@ -1,0 +1,30 @@
+{
+  "id": "nixos",
+  "name": "NixOS (community build)",
+  "os_family": "linux",
+  "homepage": "https://github.com/nshalman/nixos-cloud-image",
+  "checked_at": "2026-10-28T17:55:19.001645588Z",
+  "dev_channel": "unstable",
+  "releases": [
+    {
+      "id": "26.05",
+      "version": "26.05",
+      "title": "NixOS (community build) 26.05",
+      "aliases": [
+        "latest"
+      ],
+      "eol_date": null,
+      "osinfo": null
+    },
+    {
+      "id": "unstable",
+      "version": "unstable",
+      "title": "NixOS (community build) unstable",
+      "aliases": [
+        "dev"
+      ],
+      "eol_date": null,
+      "osinfo": null
+    }
+  ]
+}

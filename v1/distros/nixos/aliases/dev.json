@@ -1,0 +1,53 @@
+{
+  "distro": "nixos",
+  "release": "unstable",
+  "builds": [
+    {
+      "build": "26.11.20261027.31ecbac-jxc497c8",
+      "point_release": null,
+      "published_at": "2026-10-28T17:52:21Z",
+      "first_seen": "2026-10-28T17:55:19.001645588Z",
+      "osinfo": null,
+      "artifacts": [
+        {
+          "variant": "smartos",
+          "default_variant": true,
+          "arch": "x86_64",
+          "format": "qcow2",
+          "compression": "none",
+          "firmware": [],
+          "datasources": [
+            "nocloud"
+          ],
+          "ssh_key_injection": true,
+          "size": 748819968,
+          "locations": [
+            {
+              "url": "https://github.com/nshalman/nixos-cloud-image/releases/download/26.11.20261027.31ecbac-jxc497c8/nixos-smartos-x86_64.qcow2",
+              "kind": "primary",
+              "redirects_off_host": true
+            }
+          ],
+          "integrity": {
+            "digests": [
+              {
+                "algorithm": "sha256",
+                "value": "1f991747756248d4116157b7511e3f3fd7fcd4503afd67b686d555c5f715fc7f",
+                "source": {
+                  "url": "https://github.com/nshalman/nixos-cloud-image/releases/download/26.11.20261027.31ecbac-jxc497c8/nixos-smartos-x86_64.qcow2.sha256",
+                  "format": "gnu",
+                  "filename": "nixos-smartos-x86_64.qcow2"
+                }
+              }
+            ],
+            "signatures": [],
+            "http": {
+              "last_modified": null,
+              "etag": null
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
