@@ -160,3 +160,66 @@ jobs:
             echo "Deleting $tag"
             gh release delete "$tag" --cleanup-tag --yes
           done < prune.txt
+
+  index:
+    # Publish an index of these releases in cloud-image-index's format on
+    # the gh-pages branch, which GitHub Pages serves, so that
+    #   cloud-image import --index https://nshalman.github.io/nixos-cloud-image/ nixos latest
+    # works whether or not the main index lists NixOS. It is written by
+    # cloud-image-index's own generator, at a pinned commit: the NixOS
+    # resolver is only on its nixos-resolver branch so far.
+    needs: prune
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: index
+    env:
+      INDEX_REPO: https://github.com/TritonDataCenter/cloud-image-index
+      INDEX_REV: caae40753354dd05f8c4ec1d9453b5e28ae4bd91
+      GENERATE: generator/target/release/cloud-image-index-generate
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build the generator
+        run: |
+          git init -q generator
+          git -C generator fetch -q --depth 1 "$INDEX_REPO" "$INDEX_REV"
+          git -C generator checkout -q FETCH_HEAD
+          # rustup installs the toolchain the checkout's
+          # rust-toolchain.toml names.
+          (cd generator && cargo build --release --locked -p cloud-image-index-generate)
+
+      - name: Check out the published index
+        run: |
+          if git ls-remote -q --exit-code --heads origin gh-pages > /dev/null; then
+            git fetch -q --depth 1 origin gh-pages
+            git worktree add -q --detach pages FETCH_HEAD
+          else
+            git worktree add -q --orphan -b gh-pages pages
+          fi
+          # The generator checks the tree it writes and refuses anything
+          # the index format does not define, such as the worktree's .git,
+          # so it works on a copy.
+          mkdir site
+          if git -C pages rev-parse -q --verify HEAD > /dev/null; then
+            git -C pages archive HEAD | tar -x -C site
+          fi
+
+      - name: Generate
+        run: |
+          "$GENERATE" vendor nixos --previous site --out fragment
+          "$GENERATE" assemble --site site fragment
+
+      - name: Publish
+        run: |
+          git -C pages rm -rq --ignore-unmatch .
+          cp -r site/. pages/
+          git -C pages add -A
+          if git -C pages diff --cached --quiet; then
+            echo "::notice::the index is unchanged"
+            exit 0
+          fi
+          git -C pages -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Index from run $GITHUB_RUN_ID"
+          git -C pages push origin HEAD:refs/heads/gh-pages

@@ -71,6 +71,8 @@ byte-identical, because the image build isn't reproducible bit for bit.
   stable monthly and on every push to `main`. It skips images released
   already, boot-tests the rest before releasing them, and keeps the newest
   3 releases of each stable series and 4 of unstable.
+  After each run it publishes an index of the current releases (see
+  below).
 - `check-stable.yml` runs daily. When NixOS tags a newer release, it opens
   a pull request moving the stable input to it, with the result of
   building and boot-testing that image.
@@ -78,3 +80,16 @@ byte-identical, because the image build isn't reproducible bit for bit.
 
 The tools these call are flake apps, tested by `nix flake check`:
 `release-info`, `release-assets`, `prune-releases` and `bump-stable`.
+
+## Importing on SmartOS
+
+[`cloud-image`](https://github.com/TritonDataCenter/cloud-image-index)
+imports these images from the index this repository publishes on GitHub
+Pages, in cloud-image-index's format:
+
+    cloud-image import --index https://nshalman.github.io/nixos-cloud-image/ nixos latest
+
+`nixos dev` imports the unstable image, and `cloud-image avail` with the
+same `--index` lists both. The index lives on the `gh-pages` branch;
+`build.yml` writes it with cloud-image-index's own generator, at the
+commit `INDEX_REV` names.
