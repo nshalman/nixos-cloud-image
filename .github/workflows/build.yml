@@ -180,7 +180,22 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # The binary depends only on INDEX_REV (whose rust-toolchain.toml
+      # fixes the toolchain) and the runner image it links against, so
+      # it is cached under those. Building it takes minutes; running it,
+      # seconds.
+      - name: Name the runner image
+        id: runner
+        run: echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
+      - name: Restore the generator
+        id: cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.GENERATE }}
+          key: generator-${{ steps.runner.outputs.image }}-${{ runner.arch }}-${{ env.INDEX_REV }}
+
       - name: Build the generator
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           git init -q generator
           git -C generator fetch -q --depth 1 "$INDEX_REPO" "$INDEX_REV"
