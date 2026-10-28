@@ -43,3 +43,6 @@ both build an image (`system.build.images.qemu-efi`) and be applied with
 alone, so it survives rebuilds and reboots, unless your configuration
 takes that over itself (setting `networking.hostName`, or
 `users.mutableUsers = false`, for example).
+
+Building, testing and the release pipeline are described in
+[MAINTAINING.md](MAINTAINING.md).

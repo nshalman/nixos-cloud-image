@@ -57,3 +57,10 @@ The tools these call are flake apps, tested by `nix flake check`:
 The index lives on the `gh-pages` branch;
 `build.yml` writes it with cloud-image-index's own generator, at the
 commit `INDEX_REV` names.
+The generator binary is cached under the runner image, architecture and
+`INDEX_REV`, so it is rebuilt only when one of those changes, or after
+GitHub evicts a cache unused for 7 days.
+
+`INDEX_REV` is on cloud-image-index's `nixos-resolver` branch, the
+branch of TritonDataCenter/cloud-image-index#27, which adds the NixOS
+resolver. When that merges, move `INDEX_REV` to the merged commit.
