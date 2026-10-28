@@ -1,4 +1,4 @@
-# cloud-image-nix
+# nixos-cloud-image
 
 A NixOS image for SmartOS bhyve guests, configured at boot by cloud-init
 from the NoCloud `CIDATA` disk that `vmadm` attaches: hostname from
