@@ -6,7 +6,7 @@
         "name": "NixOS (community build)",
         "os_family": "linux",
         "homepage": "https://github.com/nshalman/nixos-cloud-image",
-        "checked_at": "2026-11-23T14:31:13.914581842Z"
+        "checked_at": "2026-11-23T14:45:18.229854025Z"
       },
       "release": {
         "id": "26.05",
@@ -72,7 +72,7 @@
         "name": "NixOS (community build)",
         "os_family": "linux",
         "homepage": "https://github.com/nshalman/nixos-cloud-image",
-        "checked_at": "2026-11-23T14:31:13.914581842Z"
+        "checked_at": "2026-11-23T14:45:18.229854025Z"
       },
       "release": {
         "id": "unstable",
