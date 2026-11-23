@@ -3,7 +3,7 @@
   "name": "NixOS (community build)",
   "os_family": "linux",
   "homepage": "https://github.com/nshalman/nixos-cloud-image",
-  "checked_at": "2026-11-23T05:31:38.041716833Z",
+  "checked_at": "2026-11-23T14:31:13.914581842Z",
   "dev_channel": "unstable",
   "releases": [
     {
