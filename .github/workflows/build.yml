@@ -175,7 +175,7 @@ jobs:
       group: index
     env:
       INDEX_REPO: https://github.com/TritonDataCenter/cloud-image-index
-      INDEX_REV: 12113017e206951f38f16cae590187d1361cee69
+      INDEX_REV: 42a353f22e3cf9a558f549e0d736c00a688b0e51
       GENERATE: generator/target/release/cloud-image-index-generate
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
