@@ -63,4 +63,7 @@ GitHub evicts a cache unused for 7 days.
 
 `INDEX_REV` is on cloud-image-index's `nixos-resolver` branch, the
 branch of TritonDataCenter/cloud-image-index#27, which adds the NixOS
-resolver. When that merges, move `INDEX_REV` to the merged commit.
+resolver. That branch is rebased on the `github-token` branch of
+TritonDataCenter/cloud-image-index#28, which makes the generator send
+`GITHUB_TOKEN` on GitHub API requests. When they merge, move
+`INDEX_REV` to the merged commit.

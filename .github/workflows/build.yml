@@ -175,7 +175,7 @@ jobs:
       group: index
     env:
       INDEX_REPO: https://github.com/TritonDataCenter/cloud-image-index
-      INDEX_REV: caae40753354dd05f8c4ec1d9453b5e28ae4bd91
+      INDEX_REV: 12113017e206951f38f16cae590187d1361cee69
       GENERATE: generator/target/release/cloud-image-index-generate
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -221,6 +221,11 @@ jobs:
           fi
 
       - name: Generate
+        env:
+          # For the GitHub API's higher rate limit: the generator reads
+          # this repository's releases there, and unauthenticated
+          # requests share a per-IP budget (one run failed on it).
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           "$GENERATE" vendor nixos --previous site --out fragment
           "$GENERATE" assemble --site site fragment
