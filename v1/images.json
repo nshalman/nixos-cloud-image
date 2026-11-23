@@ -6,7 +6,7 @@
         "name": "NixOS (community build)",
         "os_family": "linux",
         "homepage": "https://github.com/nshalman/nixos-cloud-image",
-        "checked_at": "2026-11-02T05:27:58.184385398Z"
+        "checked_at": "2026-11-23T05:31:38.041716833Z"
       },
       "release": {
         "id": "26.05",
@@ -72,7 +72,7 @@
         "name": "NixOS (community build)",
         "os_family": "linux",
         "homepage": "https://github.com/nshalman/nixos-cloud-image",
-        "checked_at": "2026-11-02T05:27:58.184385398Z"
+        "checked_at": "2026-11-23T05:31:38.041716833Z"
       },
       "release": {
         "id": "unstable",
@@ -85,10 +85,10 @@
         "osinfo": null
       },
       "build": {
-        "build": "26.11.20261030.1c89083-b0qmbn1w",
+        "build": "26.11.20261121.2786a2a-i0zwx410",
         "point_release": null,
-        "published_at": "2026-11-02T05:27:29Z",
-        "first_seen": "2026-11-02T05:27:58.184385398Z",
+        "published_at": "2026-11-23T05:29:24Z",
+        "first_seen": "2026-11-23T05:31:38.041716833Z",
         "osinfo": null,
         "artifacts": [
           {
@@ -102,10 +102,10 @@
               "nocloud"
             ],
             "ssh_key_injection": true,
-            "size": 749170176,
+            "size": 750163456,
             "locations": [
               {
-                "url": "https://github.com/nshalman/nixos-cloud-image/releases/download/26.11.20261030.1c89083-b0qmbn1w/nixos-smartos-x86_64.qcow2",
+                "url": "https://github.com/nshalman/nixos-cloud-image/releases/download/26.11.20261121.2786a2a-i0zwx410/nixos-smartos-x86_64.qcow2",
                 "kind": "primary",
                 "redirects_off_host": true
               }
@@ -114,9 +114,9 @@
               "digests": [
                 {
                   "algorithm": "sha256",
-                  "value": "58834f389c84906fd87ef4bcbea3ae3555eee34aad269374a28d06a835b87b32",
+                  "value": "d610685843df005a1c8c94251dbb64dbfd2a4403ce97af9c1b00e1f8e2fb3438",
                   "source": {
-                    "url": "https://github.com/nshalman/nixos-cloud-image/releases/download/26.11.20261030.1c89083-b0qmbn1w/nixos-smartos-x86_64.qcow2.sha256",
+                    "url": "https://github.com/nshalman/nixos-cloud-image/releases/download/26.11.20261121.2786a2a-i0zwx410/nixos-smartos-x86_64.qcow2.sha256",
                     "format": "gnu",
                     "filename": "nixos-smartos-x86_64.qcow2"
                   }
